@@ -21,7 +21,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.shtarkstudio.planit"
-    },
+          },
     "plugins": [
       [
         "expo-notifications",

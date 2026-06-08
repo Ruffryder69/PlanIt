@@ -7,78 +7,93 @@ import { Event, Reminder } from '../context/EventContext';
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),
 });
 
 export async function requestNotificationPermission(): Promise<boolean> {
-  if (!Device.isDevice) return false;
-
-  const { status: existing } = await Notifications.getPermissionsAsync();
-  if (existing === 'granted') return true;
-
-  const { status } = await Notifications.requestPermissionsAsync();
-  return status === 'granted';
+  try {
+    if (!Device.isDevice) return false;
+    const { status: existing } = await Notifications.getPermissionsAsync();
+    if (existing === 'granted') return true;
+    const { status } = await Notifications.requestPermissionsAsync();
+    return status === 'granted';
+  } catch (e) {
+    console.log('Notification permission error:', e);
+    return false;
+  }
 }
 
 export async function scheduleEventNotification(event: Event): Promise<void> {
-  if (event.reminder === 'none') return;
+  try {
+    if (event.reminder === 'none') return;
+    await cancelEventNotification(event.id);
 
-  // Alte Notification für dieses Event canceln
-  await cancelEventNotification(event.id);
+    const [year, month, day] = event.date.split('-').map(Number);
+    const [hour, minute] = event.startTime.split(':').map(Number);
+    const eventDate = new Date(year, month - 1, day, hour, minute, 0);
 
-  const [year, month, day] = event.date.split('-').map(Number);
-  const [hour, minute] = event.startTime.split(':').map(Number);
+    const offsetMinutes: Record<Reminder, number> = {
+      '15min': 15,
+      '1h': 60,
+      '1day': 60 * 24,
+      'none': 0,
+    };
 
-  const eventDate = new Date(year, month - 1, day, hour, minute, 0);
+    const triggerDate = new Date(eventDate.getTime() - offsetMinutes[event.reminder] * 60 * 1000);
+    if (triggerDate <= new Date()) return;
 
-  const offsetMinutes: Record<Reminder, number> = {
-    '15min': 15,
-    '1h': 60,
-    '1day': 60 * 24,
-    'none': 0,
-  };
+    const reminderLabel: Record<Reminder, string> = {
+      '15min': '15 Minuten',
+      '1h': '1 Stunde',
+      '1day': '1 Tag',
+      'none': '',
+    };
 
-  const triggerDate = new Date(eventDate.getTime() - offsetMinutes[event.reminder] * 60 * 1000);
-
-  if (triggerDate <= new Date()) return; // Zeitpunkt liegt in der Vergangenheit
-
-  const reminderLabel: Record<Reminder, string> = {
-    '15min': '15 Minuten',
-    '1h': '1 Stunde',
-    '1day': '1 Tag',
-    'none': '',
-  };
-
-  await Notifications.scheduleNotificationAsync({
-    identifier: `event-${event.id}`,
-    content: {
-      title: event.title,
-      body: `Beginnt in ${reminderLabel[event.reminder]} um ${event.startTime} Uhr`,
-      sound: true,
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.DATE,
-      date: triggerDate,
-    },
-  });
+    await Notifications.scheduleNotificationAsync({
+      identifier: `event-${event.id}`,
+      content: {
+        title: event.title,
+        body: `Beginnt in ${reminderLabel[event.reminder]} um ${event.startTime} Uhr`,
+        sound: true,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: triggerDate,
+      },
+    });
+  } catch (e) {
+    console.log('Schedule notification error:', e);
+  }
 }
 
 export async function cancelEventNotification(eventId: string): Promise<void> {
-  await Notifications.cancelScheduledNotificationAsync(`event-${eventId}`);
+  try {
+    await Notifications.cancelScheduledNotificationAsync(`event-${eventId}`);
+  } catch (e) {
+    console.log('Cancel notification error:', e);
+  }
 }
 
 export function useNotifications() {
   useEffect(() => {
-    requestNotificationPermission();
-
-    if (Platform.OS === 'android') {
-      Notifications.setNotificationChannelAsync('default', {
-        name: 'default',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-      });
-    }
+    const setup = async () => {
+      try {
+        await requestNotificationPermission();
+        if (Platform.OS === 'android') {
+          await Notifications.setNotificationChannelAsync('default', {
+            name: 'default',
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+          });
+        }
+      } catch (e) {
+        console.log('Notification setup error:', e);
+      }
+    };
+    setup();
   }, []);
 }

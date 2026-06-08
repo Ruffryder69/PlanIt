@@ -1,4 +1,4 @@
-import { NavigationContainer } from '@react-navigation/native';
+import 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { EventProvider } from './context/EventContext';
@@ -9,10 +9,10 @@ import { useNotifications } from './hooks/useNotifications';
 function AppInner() {
   useNotifications();
   return (
-    <NavigationContainer>
+    <>
       <StatusBar style="auto" />
       <MainNavigator />
-    </NavigationContainer>
+    </>
   );
 }
 
