@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, useColorScheme,
+  View, Text, StyleSheet,
   TouchableOpacity, ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useEvents, Event } from '../context/EventContext';
 import { useSettings } from '../context/SettingsContext';
+import { useAppTheme, AppTheme } from '../hooks/useAppTheme';
 import { getHolidays } from '../constants/holidays';
 import { CATEGORIES } from '../constants/categories';
 import { EventFormModal } from '../components/EventFormModal';
 
 const WEEKDAYS_SHORT = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 const MONTHS_SHORT = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
-const HOURS = Array.from({ length: 16 }, (_, i) => i + 7);
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 function toDateString(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
@@ -38,7 +39,8 @@ function addWeeks(date: Date, weeks: number): Date {
 }
 
 export function WeekScreen() {
-  const isDark = useColorScheme() === 'dark';
+  const theme = useAppTheme();
+  const { accent, onAccent, textPrimary, textSecondary } = theme;
   const { events } = useEvents();
   const { bundesland } = useSettings();
   const today = new Date();
@@ -48,7 +50,7 @@ export function WeekScreen() {
   const [editEvent, setEditEvent] = useState<Event | null>(null);
   const [selectedDate, setSelectedDate] = useState(toDateString(today));
 
-  const s = styles(isDark);
+  const s = styles(theme);
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const holidays = getHolidays(weekStart.getFullYear(), bundesland);
@@ -80,19 +82,16 @@ export function WeekScreen() {
 
   return (
     <View style={s.container}>
-
-    
-
       {/* Woche Navigation */}
       <View style={s.weekNav}>
         <TouchableOpacity onPress={() => setWeekStart(d => addWeeks(d, -1))} style={s.navBtn}>
-          <Ionicons name="chevron-back" size={20} color={isDark ? '#fff' : '#1a1a1a'} />
+          <Ionicons name="chevron-back" size={20} color={textPrimary} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setWeekStart(getMonday(today))}>
           <Text style={s.weekTitle}>{weekLabel()}</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setWeekStart(d => addWeeks(d, 1))} style={s.navBtn}>
-          <Ionicons name="chevron-forward" size={20} color={isDark ? '#fff' : '#1a1a1a'} />
+          <Ionicons name="chevron-forward" size={20} color={textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -150,9 +149,7 @@ export function WeekScreen() {
                         style={[s.cellEvent, { backgroundColor: cat?.color ?? '#888' }]}
                         onPress={() => { setEditEvent(ev); setModalVisible(true); }}
                       >
-                        <Text style={[s.cellEventText, { color: '#fff' }]} numberOfLines={1}>
-                          {ev.title}
-                        </Text>
+                        <Text style={s.cellEventText} numberOfLines={1}>{ev.title}</Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -168,7 +165,7 @@ export function WeekScreen() {
         style={s.fab}
         onPress={() => { setEditEvent(null); setModalVisible(true); }}
       >
-        <Ionicons name="add" size={28} color={isDark ? '#1a1a1a' : '#fff'} />
+        <Ionicons name="add" size={28} color={onAccent} />
       </TouchableOpacity>
 
       <EventFormModal
@@ -177,45 +174,43 @@ export function WeekScreen() {
         editEvent={editEvent}
         defaultDate={selectedDate}
       />
-
     </View>
   );
 }
 
-const styles = (isDark: boolean) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: isDark ? '#1a1a1a' : '#fff' },
-  
+const styles = ({ isDark, accent, onAccent, bg, surface, textPrimary, textSecondary, textTertiary, border }: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: bg },
   weekNav: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 8,
   },
   navBtn: { padding: 6 },
-  weekTitle: { fontSize: 14, fontWeight: '500', color: isDark ? '#fff' : '#1a1a1a', textAlign: 'center' },
-  dayHeader: { flexDirection: 'row', paddingHorizontal: 8, paddingBottom: 8, borderBottomWidth: 0.5, borderBottomColor: isDark ? '#333' : '#e5e5e5' },
+  weekTitle: { fontSize: 14, fontWeight: '500', color: textPrimary, textAlign: 'center' },
+  dayHeader: { flexDirection: 'row', paddingHorizontal: 8, paddingBottom: 8, borderBottomWidth: 0.5, borderBottomColor: border },
   timeGutter: { width: 44 },
   dayHeaderCell: { flex: 1, alignItems: 'center' },
-  dayHeaderWeekday: { fontSize: 10, fontWeight: '500', color: isDark ? '#666' : '#aaa', marginBottom: 3 },
-  holidayLabel: { color: isDark ? '#888' : '#bbb' },
+  dayHeaderWeekday: { fontSize: 10, fontWeight: '500', color: textSecondary, marginBottom: 3 },
+  holidayLabel: { color: isDark ? '#EF9A9A' : '#C62828' },
   dayHeaderNum: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  todayCircle: { backgroundColor: isDark ? '#fff' : '#1a1a1a' },
-  selectedCircle: { borderWidth: 1.5, borderColor: isDark ? '#fff' : '#1a1a1a' },
-  dayHeaderNumText: { fontSize: 13, color: isDark ? '#ccc' : '#1a1a1a' },
-  todayText: { color: isDark ? '#1a1a1a' : '#fff', fontWeight: '600' },
-  selectedText: { fontWeight: '600', color: isDark ? '#fff' : '#1a1a1a' },
+  todayCircle: { backgroundColor: accent },
+  selectedCircle: { borderWidth: 1.5, borderColor: accent },
+  dayHeaderNumText: { fontSize: 13, color: textPrimary },
+  todayText: { color: onAccent, fontWeight: '600' },
+  selectedText: { fontWeight: '600', color: accent },
   grid: { flex: 1, paddingHorizontal: 8 },
   hourRow: { flexDirection: 'row', minHeight: 52 },
-  hourLabel: { width: 44, fontSize: 10, color: isDark ? '#555' : '#bbb', paddingTop: 2, textAlign: 'right', paddingRight: 6 },
-  cell: { flex: 1, borderLeftWidth: 0.5, borderLeftColor: isDark ? '#2a2a2a' : '#f0f0f0', paddingLeft: 2 },
-  cellLine: { position: 'absolute', top: 0, left: 0, right: 0, height: 0.5, backgroundColor: isDark ? '#2a2a2a' : '#f0f0f0' },
+  hourLabel: { width: 44, fontSize: 10, color: textTertiary, paddingTop: 2, textAlign: 'right', paddingRight: 6 },
+  cell: { flex: 1, borderLeftWidth: 0.5, borderLeftColor: border, paddingLeft: 2 },
+  cellLine: { position: 'absolute', top: 0, left: 0, right: 0, height: 0.5, backgroundColor: border },
   cellEvent: {
     borderLeftWidth: 2, borderRadius: 4,
     paddingHorizontal: 4, paddingVertical: 3, marginBottom: 2, marginTop: 1,
   },
-  cellEventText: { fontSize: 9, fontWeight: '600' },
+  cellEventText: { fontSize: 9, fontWeight: '600', color: '#fff' },
   fab: {
     position: 'absolute', bottom: 48, right: 24,
     width: 56, height: 56, borderRadius: 28,
-    backgroundColor: isDark ? '#fff' : '#1a1a1a',
+    backgroundColor: accent,
     alignItems: 'center', justifyContent: 'center',
   },
 });
