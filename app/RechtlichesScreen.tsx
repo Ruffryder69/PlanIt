@@ -33,7 +33,7 @@ export function RechtlichesScreen({ onClose }: { onClose: () => void }) {
         <View style={s.card}>
           <Text style={s.label}>UMSATZSTEUER</Text>
           <Text style={s.text}>
-            Gemäß § 19 Abs. 1 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmerregelung).
+            Die Kleinunternehmerregelung gemäß § 19 Abs. 1 UStG wird nicht in Anspruch genommen. Die steuerliche Erfassung beim zuständigen Finanzamt ist derzeit noch nicht abgeschlossen; eine Umsatzsteuer-Identifikationsnummer liegt noch nicht vor und wird nach Erteilung ergänzt.
           </Text>
         </View>
 
