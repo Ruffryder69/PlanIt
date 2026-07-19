@@ -33,7 +33,7 @@ export function RechtlichesScreen({ onClose }: { onClose: () => void }) {
         <View style={s.card}>
           <Text style={s.label}>UMSATZSTEUER</Text>
           <Text style={s.text}>
-            Die Kleinunternehmerregelung gemäß § 19 Abs. 1 UStG wird nicht in Anspruch genommen. Die steuerliche Erfassung beim zuständigen Finanzamt ist derzeit noch nicht abgeschlossen; eine Umsatzsteuer-Identifikationsnummer liegt noch nicht vor und wird nach Erteilung ergänzt.
+            Die Kleinunternehmerregelung gemäß § 19 Abs. 1 UStG wird nicht in Anspruch genommen.{'\n'}Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG: DE463773319{'\n'}Steuernummer: 57/214/07747
           </Text>
         </View>
 
